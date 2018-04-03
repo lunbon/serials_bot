@@ -7,7 +7,7 @@ import discord
 import pickle
 import asyncio
 
-token='NDIxNzE2MTIxMzAxOTQyMjky.DaT2Cw.va3RS2jJ7rgpj1DgUTqSzS88LzM'
+token='NDE3Njk2Nzc4OTkzNzk1MDcy.DaT9iw.ZnnKcAyFm16PZ6g_vxHxrnNu2ZI'
 
 bot=commands.Bot(command_prefix='?')
 
