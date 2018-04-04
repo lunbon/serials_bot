@@ -14,7 +14,7 @@ description=(
 	Бот. Напоминает. О выходе новых серий. Но это не точно.
 
 	""")
-token='NDE3Njk2Nzc4OTkzNzk1MDcy.DaZ1zA.BryXV3N31iH02Knk_JMUchGi4Dw'
+token='NDMxMTI1ODY3NTk1NDMxOTM2.DaaM1g.sl5SgJPCYOa-RwT1hYwFaSJEdMM'
 bot=commands.Bot(command_prefix='?',description=description)
 
 @bot.event
