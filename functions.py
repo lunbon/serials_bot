@@ -1,9 +1,12 @@
 import requests
-#from bs4 import BeautifulSoup as bs
 import re 
-import pickle
+import sqlite3
 from models import Title
 import asyncio
+
+conn = sqlite3.connect('Rin.db')
+cursor = conn.cursor()
+
 def get_last_episode(url):
 	try:
 		html=requests.get(url)
@@ -13,51 +16,53 @@ def get_last_episode(url):
 		return "404"
 	text=html.text
 	return re.findall('[0-9]* сезон \d* серия',text)[0]
-def get_or_create_server_file(server,channel):
-	server=str(server)+".pickle"
-	try:
-		 open(server,'rb')
-	except FileNotFoundError:
-		with open(server,'wb') as f:
-			pickle.dump((channel,[]),f)
-	return server
 
-	return server
-def save_user_link_episode(user, url, episode,file):
-	with open(file,'rb') as f:
-			channel,titles=pickle.load(f)
-			for title in titles:
-				if url == title.url:
-					title.users.append(user)
-					break
-			else:
-				titles.append(Title(user, url, episode))
-			
-	with open(file,'wb') as f:
-		pickle.dump((channel,titles),f)
-
-async def check_new_eps(bot):
-	await bot.wait_until_ready()
-	servers = list(bot.servers)
-	while not bot.is_closed:
-		for server in servers:
-			server_name=str(server)+'.pickle'
-			try:
-				with open(server_name,'rb') as f:
-					channel,titles = pickle.load(f)
-			except FileNotFoundError:
-				continue
-			for title in titles:
-				last_episode = get_last_episode(title.url)
-				if last_episode == "404" or last_episode == "ConnectionError":	
-					await bot.send_message(channel, "Ошибка при обработке - "+title.url)
-					continue
-				if title.last_episode < last_episode:
-					message = ', '.join(title.users) + ' Вышли новые серии!\n' + title.url
-					await bot.send_message(channel, message)
-					title.last_episode = last_episode
-			with open(str(server)+'.pickle','wb') as f:
-				pickle.dump((channel,titles), f)
-				await asyncio.sleep(3)
-		await asyncio.sleep(3600)
-
+def check_user_raw(id):
+	response = cursor.execute("""
+								SELECT * 
+								FROM users
+								WHERE user_id = %s;"""%id)
+	for i in response:return True
+	else:return False
+def create_user_raw(id):
+	cursor.execute("""
+					INSERT INTO users
+					VALUES(%s)
+					"""%id)
+	conn.commit()
+def check_tv_raw(id,url):
+	s="""SELECT *
+		FROM users_list
+		WHERE user_id = %s AND link = '%s';"""
+	response=cursor.execute(s%(id,url))
+	for i in response:return True
+	else:return False
+def create_tv_raw(id,url,last_episode):
+	cursor.execute("""
+					INSERT INTO users_list
+					VALUES('%s','%s','%s')
+					"""%(url,last_episode,id))
+	conn.commit()
+def update_tv_last(url,last,id):
+	cursor.execute("""
+					UPDATE users_list
+					SET last_episode = '%s'
+					WHERE user_id=%s AND link = '%s'; 
+					"""%(last,id,url))
+	conn.commit()
+def save_user_link_episode(id,url,last_episode):
+	print(not check_tv_raw(id,url))
+	if not check_user_raw(id):
+		create_user_raw(id)
+	if not check_tv_raw(id,url):
+		create_tv_raw(id,url,last_episode)
+def get_list(id):
+	if check_user_raw(id):
+		response=cursor.execute("""SELECT *
+					FROM users_list
+					WHERE user_id='%s'"""%id)
+		return response
+def get_users_list():
+	response=cursor.execute("""SELECT *
+							FROM users_list;""")
+	return response
