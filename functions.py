@@ -34,8 +34,9 @@ def check_tv_raw(id,url):
 	s="""SELECT *
 		FROM users_list
 		WHERE user_id = %s AND link = '%s';"""
-	response=cursor.execute(s%(id,url))
-	for i in response:return True
+	response = cursor.execute(s%(id,url))
+	response = list(response)
+	if len(response) == 1:return True
 	else:return False
 def create_tv_raw(id,url,last_episode):
 	cursor.execute("""
@@ -51,17 +52,20 @@ def update_tv_last(url,last,id):
 					"""%(last,id,url))
 	conn.commit()
 def save_user_link_episode(id,url,last_episode):
-	print(not check_tv_raw(id,url))
 	if not check_user_raw(id):
 		create_user_raw(id)
 	if not check_tv_raw(id,url):
 		create_tv_raw(id,url,last_episode)
+	else:
+		update_tv_last(url,get_last_episode(url),id)
 def get_list(id):
 	if check_user_raw(id):
 		response=cursor.execute("""SELECT *
 					FROM users_list
 					WHERE user_id='%s'"""%id)
 		return response
+	else:
+		return []
 def get_users_list():
 	response=cursor.execute("""SELECT *
 							FROM users_list;""")

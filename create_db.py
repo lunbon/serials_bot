@@ -10,9 +10,9 @@ cursor.execute("""
 
 cursor.execute("""
 				CREATE TABLE users_list(
-				link text UNIQUE,
+				link text,
 				last_episode text,
-				user_id int UNIQUE, 
+				user_id int, 
 				FOREIGN KEY(user_id) REFERENCES users); 
 				""")
 cursor.execute("""
